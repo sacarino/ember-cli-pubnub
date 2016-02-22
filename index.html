@@ -1,0 +1,120 @@
+<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="README.md"><meta name="groc-github-url" content="https://github.com/tomasbasham/ember-cli-pubnub"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/tomasbasham/ember-cli-pubnub/blob/master/README.md">README.md</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="ember-cli-pubnub-build-status-https-travis-ci-org-tomasbasham-ember-cli-pubnub-svg-branch-master-https-travis-ci-org-tomasbasham-ember-cli-pubnub-">Ember-cli-pubnub <a href="https://travis-ci.org/tomasbasham/ember-cli-pubnub"><img src="https://travis-ci.org/tomasbasham/ember-cli-pubnub.svg?branch=master" alt="Build Status"></a></h1>
+<p>An <a href="http://www.ember-cli.com/">Ember CLI</a> addon to integrate the PubNub low-latency, realtime messaging platform.</p>
+<p>PubNub utilises a publish/subscribe model functioning within a quarter of a second to give the user a sense of immediate or current updates to application data making it ideal for chat or any other application requiring transient data.</p>
+<p>This addon allows ember to establish and maintain persistent web socket connections to the <a href="https://www.pubnub.com/">PubNub</a> service and synchronises messages being sent to and from remote peers.</p>
+<h2 id="installation">Installation</h2>
+<p>From within your Ember CLI project directory run:</p>
+<pre><code>ember install ember-cli-pubnub</code></pre>
+<h2 id="usage">Usage</h2>
+<p>This addon implements all of the functions listed under the <a href="https://www.pubnub.com/docs/web-javascript/api-reference">JavaScript API reference for realtime apps</a> as part of the <code>pubnub</code> service.</p>
+<h3 id="configuration">Configuration</h3>
+<p>Before the <code>pubnub</code> service can be used it first must be configured through <code>config/environment</code>. Here you must supply both your PubNub subscribe and publish API keys.</p>
+<h5 id="-a-name-configuration-example-a-example-"><a name="configuration-example"></a>Example:</h5>
+<pre><code class="lang-JavaScript"><span class="hljs-comment">// config/environment.js</span>
+<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">environment</span>) </span>{
+  <span class="hljs-keyword">var</span> ENV = {
+    PUBNUB: {
+      subscribe_key: <span class="hljs-string">'pub-c-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX'</span>,
+      publish_key: <span class="hljs-string">'sub-c-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX'</span>,
+      ssl: <span class="hljs-literal">true</span>
+    }
+  };
+
+  <span class="hljs-keyword">return</span> ENV;
+};</code></pre>
+<p>Optionally you may specify whether the PubNub JavaScript library is fetched over HTTPS using the <code>ssl</code> key. Although optional, it is recommended that you set this to <code>true</code> within a production environment.</p>
+<h3 id="injection">Injection</h3>
+<p>This addon makes no assumptions about what ember objects you want to make the <code>pubnub</code> service available. Therefore in order to make the service available you need to implement you own injections.</p>
+<h5 id="-a-name-injection-initializer-example-a-example-"><a name="injection-initializer-example"></a>Example:</h5>
+<pre><code class="lang-JavaScript"><span class="hljs-comment">// app/initializers/pubnub.js</span>
+<span class="hljs-keyword">export</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">initialize</span>(<span class="hljs-params">application</span>) </span>{
+  application.inject(<span class="hljs-string">'controller'</span>, <span class="hljs-string">'pubnub'</span>, <span class="hljs-string">'service:pubnub'</span>);
+  application.inject(<span class="hljs-string">'route'</span>, <span class="hljs-string">'pubnub'</span>, <span class="hljs-string">'service:pubnub'</span>);
+};
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> {
+  name: <span class="hljs-string">'pubnub'</span>,
+  initialize: initialize
+};</code></pre>
+<p>This will make the <code>pubnub</code> service available to all controllers and routes. It is however unlikely that you will require the service to be injected into every controller or route of your applications. Therefore it is recommended that you include the service on a per object basis.</p>
+<h5 id="-a-name-injection-controller-example-a-example-"><a name="injection-controller-example"></a>Example:</h5>
+<pre><code class="lang-JavaScript"><span class="hljs-comment">// app/controllers/application.js</span>
+<span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Ember.Controller.extend({
+  pubnub: Ember.inject.service()
+});</code></pre>
+<p>This will create a dependency on the application controller and inject the <code>pubnub</code> service into this controller only. This can be repeated across all objects that need access to the service.</p>
+<h3 id="subscribe">Subscribe</h3>
+<p>In order to receive messages you must first subscribe to a channel. Only a channel name is required to subscribe to a channel and must be unique. Other optional parameters can be passed into the subscribe function as key/value pairs and are defined within the API reference on the PubNub website.</p>
+<h5 id="-a-name-subscribe-example-a-example-"><a name="subscribe-example"></a>Example:</h5>
+<pre><code class="lang-JavaScript"><span class="hljs-comment">// app/controllers/application.js</span>
+<span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Ember.Controller.extend({
+  joinChannel: Ember.on(<span class="hljs-string">'init'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">const</span> pubnub = <span class="hljs-keyword">this</span>.get(<span class="hljs-string">'pubnub'</span>);
+    <span class="hljs-keyword">const</span> channel = pubnub.subscribe(<span class="hljs-string">'lobby'</span>);
+  })
+});</code></pre>
+<p>This will subscribe to the <code>lobby</code> channel and return a channel object that will be the interface to this channel.</p>
+<h3 id="channel">Channel</h3>
+<p>A channel object is a proxy, passing the channel name to each of the implemented functions that interact with the PubNub service. To be able to react to an incoming message you must provide a callback function that will be passed any message that is received on the channel from any connected peer.</p>
+<h5 id="-a-name-event-example-a-example-"><a name="event-example"></a>Example:</h5>
+<pre><code class="lang-JavaScript"><span class="hljs-comment">// app/controllers/application.js</span>
+<span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Ember.Controller.extend({
+  joinChannel: Ember.on(<span class="hljs-string">'init'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">const</span> pubnub = <span class="hljs-keyword">this</span>.get(<span class="hljs-string">'pubnub'</span>);
+    <span class="hljs-keyword">const</span> channel = pubnub.subscribe(<span class="hljs-string">'lobby'</span>);
+
+    channel.on(pubnub.messageEventString, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">payload</span>) </span>{
+      <span class="hljs-built_in">console</span>.log(payload.message);
+    });
+
+    channel.publish(<span class="hljs-string">'hello, world!'</span>);
+  })
+});</code></pre>
+<p>This sets up a callback using the channel&#39;s <code>on</code> method by passing to it a message event string. Typically the event string will be of type string (i.e. <code>pn-message:lobby</code>) however if a function is passed instead (i.e. <code>pubnub.messageEventString</code>) it will be called passing to it the channel name. This gives you the opportunity to dynamically create event strings. In the above example the event string function in fact simply returns <code>pn-message:lobby</code>.</p>
+<p>Further to this you are able to publish to the channel using the <code>publish</code> function. You may pass to this any valid JSON object including objects, arrays, strings, and numbers.</p>
+<h3 id="presence">Presence</h3>
+<p>You may also supply a callback that is invoked on updates to a channel&#39;s listeners.</p>
+<h5 id="-a-name-event-example-a-example-"><a name="event-example"></a>Example:</h5>
+<pre><code class="lang-JavaScript"><span class="hljs-comment">// app/controllers/application.js</span>
+<span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Ember.Controller.extend({
+  joinChannel: Ember.on(<span class="hljs-string">'init'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">const</span> pubnub = <span class="hljs-keyword">this</span>.get(<span class="hljs-string">'pubnub'</span>);
+    <span class="hljs-keyword">const</span> channel = pubnub.subscribe(<span class="hljs-string">'lobby'</span>);
+
+    channel.on(pubnub.presenceEventString, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">payload</span>) </span>{
+      <span class="hljs-built_in">console</span>.log(payload.event);
+    });
+  })
+});</code></pre>
+<p>This sets up a callback using the channel&#39;s <code>on</code> method by passing to it a presence event string. Typically the event string will be of type string (i.e. <code>pn-presence:lobby</code>) however if a function is passed instead (i.e. <code>pubnub.presenceEventString</code>) it will be called passing to it the channel name. This gives you the opportunity to dynamically create event strings. In the above example the event string function in fact simply returns <code>pn-presence:lobby</code>.</p>
+<h2 id="development">Development</h2>
+<h3 id="installation">Installation</h3>
+<ul>
+<li><code>git clone</code> this repository</li>
+<li><code>npm install</code></li>
+<li><code>bower install</code></li>
+</ul>
+<h3 id="running">Running</h3>
+<ul>
+<li><code>ember server</code></li>
+<li>Visit your app at <a href="http://localhost:4200">http://localhost:4200</a>.</li>
+</ul>
+<h3 id="running-tests">Running Tests</h3>
+<ul>
+<li><code>npm test</code> (Runs <code>ember try:testall</code> to test your addon against multiple Ember versions)</li>
+<li><code>ember test</code></li>
+<li><code>ember test --server</code></li>
+</ul>
+<h3 id="building">Building</h3>
+<ul>
+<li><code>ember build</code></li>
+</ul>
+<p>For more information on using ember-cli, visit <a href="http://www.ember-cli.com/"><a href="http://www.ember-cli.com/">http://www.ember-cli.com/</a></a>.</p></div></div></div></div></body></html>

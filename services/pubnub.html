@@ -1,0 +1,482 @@
+<!DOCTYPE html><html lang="en"><head><title>services/pubnub</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="services/pubnub"><meta name="groc-project-path" content="addon/services/pubnub.js"><meta name="groc-github-url" content="https://github.com/tomasbasham/ember-cli-pubnub"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/tomasbasham/ember-cli-pubnub/blob/master/addon/services/pubnub.js">addon/services/pubnub.js</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><p>global PUBNUB </p></div></div><div class="code"><div class="wrapper"><span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+<span class="hljs-keyword">import</span> isValid <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-cli-pubnub/utils/is-valid'</span>;
+<span class="hljs-keyword">import</span> createChannel <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-cli-pubnub/utils/create-channel'</span>;
+
+<span class="hljs-keyword">const</span> {
+  assert,
+  get,
+  on,
+  set
+} = Ember;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Ember.Service.extend(Ember.Evented, {
+  pubnub: <span class="hljs-literal">null</span>,</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'> of type <em>Ember.Object</em></span></p>
+<p>PubNub state variable.</p></div></div><div class="code"><div class="wrapper">  pnstate: Ember.Object.create(),</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'> methof configurePubNub and on init</span></p>
+<p>Instantiate the pubnub object
+and create all the channels.</p></div></div><div class="code"><div class="wrapper">  configurePubNub: on(<span class="hljs-string">'init'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">const</span> pubnubConfig = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'config'</span>)[<span class="hljs-string">'PUBNUB'</span>];
+
+    <span class="hljs-keyword">if</span> (!pubnubConfig) {
+      Ember.Error(<span class="hljs-string">'no configuration provided!'</span>);
+    }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Change to PUBNUB.init to reference the PUBNUB global hanging off WINDOW</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">const</span> pubnub = PUBNUB.init(pubnubConfig);
+
+    set(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pnstate._channels'</span>, []);
+    set(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pnstate._presence'</span>, {});
+    set(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pnstate._presData'</span>, {});
+
+    set(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>, pubnub);
+  }),</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method audit</span></p>
+<p>Reveal existing permission attributes
+set on a channel.</p>
+<p>Parameters:</p>
+<ul>
+<li><p><strong>channel must be a String.</strong><br/>(The name of the channel.)</p>
+</li>
+<li><p><strong>channelGroup must be a String.</strong><br/>(The name of the channel group.)</p>
+</li>
+<li><p><strong>callback must be a Function.</strong><br/>(Callback method that will return the permission attributes.)</p>
+</li>
+</ul></div></div><div class="code"><div class="wrapper">  audit(channel, channelGroup, callback) {
+    assert(<span class="hljs-string">'Cannot audit an undefined channel or channel group'</span>, channel || channelGroup);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Ensure the callback is present within
+the correct variable.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> callback === <span class="hljs-string">'undefined'</span>) {
+      callback = channelGroup;
+      channelGroup = <span class="hljs-literal">null</span>;
+    }
+
+    <span class="hljs-keyword">const</span> pubnub = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>);
+    pubnub.audit.call(pubnub, {
+      callback: callback,
+      channel: channel,
+      <span class="hljs-string">'channel_group'</span>: channelGroup,
+      error: <span class="hljs-keyword">this</span>._errorCallback
+    });
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method grant</span></p>
+<p>Set permissions on a channel.</p>
+<p>Parameters:</p>
+<ul>
+<li><p><strong>channel must be a String.</strong><br/>(The name of the channel.)</p>
+</li>
+<li><p><strong>channelGroup must be a String.</strong><br/>(The name of the channel group.)</p>
+</li>
+<li><p><strong>options must be an Object.</strong><br/>(Permissions to set on the channel.)</p>
+</li>
+</ul></div></div><div class="code"><div class="wrapper">  grant(channel, channelGroup, options) {
+    assert(<span class="hljs-string">'Cannot grant permission to an undefined channel or channel group'</span>, channel || channelGroup);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Ensure the options are present within
+the correct variable.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> options === <span class="hljs-string">'undefined'</span>) {
+      options = channelGroup;
+      channelGroup = <span class="hljs-literal">null</span>;
+    }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Add the channel and optionally the
+channel group to the options.</p></div></div><div class="code"><div class="wrapper">    options.channel = options.channel || channel;
+    options[<span class="hljs-string">'channel_group'</span>] = options[<span class="hljs-string">'channel_group'</span>] || channelGroup;
+
+    <span class="hljs-keyword">const</span> pubnub = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>);
+    pubnub.grant.call(pubnub, options);
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method hereNow</span></p>
+<p>Obtain information about the current
+state of a channel including a list
+of unique UUIDs currently subscribed
+to a channel and the total occupancy
+count.</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>channel must be a String.</strong><br/>(The name of the channel.)</li>
+</ul></div></div><div class="code"><div class="wrapper">  hereNow(channel) {
+    assert(<span class="hljs-string">'Cannot get presence information for an undefined channel'</span>, channel);
+
+    <span class="hljs-keyword">const</span> options = <span class="hljs-keyword">this</span>._installHandlers();
+    options.callback = options.presence;
+    options.channel = channel;
+    options.error = <span class="hljs-keyword">this</span>._errorCallback;
+    options.state = <span class="hljs-literal">true</span>;
+    options.uuids = <span class="hljs-literal">true</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Delete methods created by installHandlers.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">delete</span> options.presence;
+    <span class="hljs-keyword">delete</span> options.message;
+
+    <span class="hljs-keyword">const</span> pubnub = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>);
+    pubnub.here_now.call(pubnub, options);
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method history</span></p>
+<p>Fetch historical messages from a
+channel. The results of running
+the history will be returned by
+the registered event handler for
+the channel.</p>
+<p>Parameters:</p>
+<ul>
+<li><p><strong>channel must be a String.</strong><br/>(The name of the channel.)</p>
+</li>
+<li><p><strong>options must be an Object.</strong><br/>(Options to pass the history method.)</p>
+</li>
+</ul></div></div><div class="code"><div class="wrapper">  history(channel, options) {
+    assert(<span class="hljs-string">'Cannot get history for an undefined channel'</span>, channel);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Add the channel and the callbacks.</p></div></div><div class="code"><div class="wrapper">    options.channel = channel;
+    options.callback = <span class="hljs-keyword">this</span>.messageEventHandler(channel);
+    options.error = <span class="hljs-keyword">this</span>._errorCallback;
+
+    <span class="hljs-keyword">const</span> pubnub = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>);
+    pubnub.history.call(pubnub, options);
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method publish</span></p>
+<p>Publish messages to a channel.</p>
+<p>Parameters:</p>
+<ul>
+<li><p><strong>channel must be a String.</strong><br/>(The name of the channel.)</p>
+</li>
+<li><p><strong>message must be an Object.</strong><br/>(Any valid JSON type including objects, arrays, strings, and numbers.)</p>
+</li>
+</ul></div></div><div class="code"><div class="wrapper">  publish(channel, message) {
+    assert(<span class="hljs-string">'Cannot publish to an undefined channel'</span>, channel);
+    assert(<span class="hljs-string">'Cannot publish an invalid message'</span>, message &amp;&amp; isValid(message));
+
+    <span class="hljs-keyword">const</span> pubnub = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>);
+    <span class="hljs-keyword">return</span> pubnub.publish.call(pubnub, {
+      channel: channel,
+      error: <span class="hljs-keyword">this</span>._errorCallback,
+      message: message,
+    });
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method revoke</span></p>
+<p>Remove any non default permissions
+from a channel.</p>
+<p>Parameters:</p>
+<ul>
+<li><p><strong>channel must be a String.</strong><br/>(The name of the channel.)</p>
+</li>
+<li><p><strong>channelGroup must be a String.</strong><br/>(The name of the channel group.)</p>
+</li>
+<li><p><strong>options must be an Object.</strong><br/>(Permissions to set on the channel)</p>
+</li>
+</ul></div></div><div class="code"><div class="wrapper">  revoke(channel, channelGroup, options) {
+    assert(<span class="hljs-string">'Cannot revoke permissions from an undefined channel or channel group'</span>, channel || channelGroup);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Remove all permsissions if
+nothing is passed in.</p></div></div><div class="code"><div class="wrapper">    options = options || {};
+
+    <span class="hljs-keyword">this</span>.grant(channel, channelGroup, options);
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method setAuthKey</span></p>
+<p>Set the aithentication key for
+the pubnub connection.</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>key must be a String.</strong><br/>(The new authentication key.)</li>
+</ul></div></div><div class="code"><div class="wrapper">  setAuthKey(key) {
+    assert(<span class="hljs-string">'Cannot set undefined auth key'</span>, key);
+
+    <span class="hljs-keyword">const</span> pubnub = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>);
+    pubnub.auth.call(pubnub, key);
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method setState</span></p>
+<p>Add state information to a channel,
+and optionally for a particular
+UUID.</p>
+<p>Parameters:</p>
+<ul>
+<li><p><strong>channel must be a String.</strong><br/>(The name of the channel.)</p>
+</li>
+<li><p><strong>uuid must be a String.</strong><br/>(The UUID.)</p>
+</li>
+<li><p><strong>state must be an Object.</strong><br/>(State information to set.)</p>
+</li>
+<li><p><strong>callback must be a Function.</strong><br/>(Callback method that will return the state.)</p>
+</li>
+</ul></div></div><div class="code"><div class="wrapper">  setState(channel, uuid, state, callback) {
+    assert(<span class="hljs-string">'Cannot set state on an undefined channel'</span>, channel);
+
+    <span class="hljs-keyword">const</span> options = {};
+    options.callback = callback || Ember.K;
+    options.channel = channel;
+    options.error = <span class="hljs-keyword">this</span>._errorCallback;
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> state !== <span class="hljs-string">'undefined'</span>) {
+      options.state = state;
+    }
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> uuid !== <span class="hljs-string">'undefined'</span>) {
+      options.uuid = uuid;
+    }
+
+    <span class="hljs-keyword">const</span> pubnub = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>);
+    pubnub.state.call(pubnub, options);
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method setUuid</span></p>
+<p>Update the UUID of the user. If a
+UUID is not given then generate a
+new one before proceeding.</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>uuid must be a String.</strong><br/>(The new UUID.)</li>
+</ul></div></div><div class="code"><div class="wrapper">  setUuid(uuid) {
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> uuid === <span class="hljs-string">'undefined'</span>) {
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.uuid(<span class="hljs-keyword">this</span>.setUuid);
+    }
+
+    <span class="hljs-keyword">const</span> pubnub = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>);
+    pubnub.set_uuid.call(pubnub, uuid);
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method state</span></p>
+<p>Grab the current state of a
+channel, and optionally for a
+particular UUID.</p>
+<p>Parameters:</p>
+<ul>
+<li><p><strong>channel must be a String.</strong><br/>(The name of the channel.)</p>
+</li>
+<li><p><strong>uuid must be a String.</strong><br/>(The UUID)</p>
+</li>
+<li><p><strong>callback must be a Function.</strong><br/>(Callback method that will return the state.)</p>
+</li>
+</ul></div></div><div class="code"><div class="wrapper">  state(channel, uuid, callback) {
+    <span class="hljs-keyword">this</span>.setState(channel, uuid, <span class="hljs-literal">null</span>, callback);
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method subscribe</span></p>
+<p>Subscribe the user to a channel,
+optionally in a channel group.</p>
+<p>Parameters:</p>
+<ul>
+<li><p><strong>channel must be a String.</strong><br/>(The name of the channel.)</p>
+</li>
+<li><p><strong>channelGroup must be a String.</strong><br/>(The name of the channel group.)</p>
+</li>
+<li><p><strong>options must be an Object.</strong><br/>(Any extra options to send to subscribe.)</p>
+</li>
+</ul>
+<p><strong>Returns an Ember.Object</strong><br/>(A channel object.)</p></div></div><div class="code"><div class="wrapper">  subscribe(channel, channelGroup, options) {
+    assert(<span class="hljs-string">'Cannot subscribe to an undefined channel or channel group'</span>, channel || channelGroup);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Return channels that we are already
+subscribed to.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">const</span> pnstate = <span class="hljs-keyword">this</span>.get(<span class="hljs-string">'pnstate'</span>);
+    <span class="hljs-keyword">if</span> (pnstate[<span class="hljs-string">'_channels'</span>].indexOf(channel) &gt;= <span class="hljs-number">0</span>) {
+      <span class="hljs-keyword">return</span> createChannel(channel, <span class="hljs-keyword">this</span>);
+    }
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> channelGroup === <span class="hljs-string">'object'</span>) {
+      options = channelGroup;
+      channelGroup = <span class="hljs-literal">null</span>;
+    }
+
+    options = options || {};
+    options.channel = channel;
+    options[<span class="hljs-string">'channel_group'</span>] = channelGroup;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Install a series of handlers.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">this</span>._installHandlers(options);
+
+    <span class="hljs-keyword">if</span> (pnstate[<span class="hljs-string">'_channels'</span>].indexOf(channel) &lt; <span class="hljs-number">0</span>) {
+      pnstate[<span class="hljs-string">'_channels'</span>].push(channel);
+    }
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> pnstate[<span class="hljs-string">'_presData'</span>][channel] === <span class="hljs-string">'undefined'</span>) {
+      pnstate[<span class="hljs-string">'_presence'</span>][channel] = [];
+    }
+
+    <span class="hljs-keyword">const</span> pubnub = <span class="hljs-keyword">this</span>.get(<span class="hljs-string">'pubnub'</span>);
+    pubnub.subscribe.call(pubnub, options);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Create the interface to use this
+new channel.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">const</span> newChannel = createChannel(channel, <span class="hljs-keyword">this</span>);
+    <span class="hljs-keyword">return</span> newChannel;
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method time</span></p>
+<p>Return a 17 digit percision UNIX
+epoch.</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>callback must be a Function.</strong><br/>(Callback method that will return the UNIX epoch.)</li>
+</ul></div></div><div class="code"><div class="wrapper">  time(callback) {
+    <span class="hljs-keyword">const</span> pubnub = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>);
+    pubnub.uuid.call(pubnub, callback);
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method unsubscribe</span></p>
+<p>Unsubscribe from a channel that is
+optionally part of a channel group.</p>
+<p>Parameters:</p>
+<ul>
+<li><p><strong>channel must be a String.</strong><br/>(The name of the channel.)</p>
+</li>
+<li><p><strong>channelGroup must be a String.</strong><br/>(The name of the channel group.)</p>
+</li>
+</ul></div></div><div class="code"><div class="wrapper">  unsubscribe(channel, channelGroup) {
+    assert(<span class="hljs-string">'Cannot unsubscribe from an undefined channel or channel group'</span>, channel || channelGroup);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Remove the channel from the list
+of stored channels and delete it
+from memory.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">const</span> pnstate = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pnstate'</span>);
+    <span class="hljs-keyword">const</span> cpos = pnstate[<span class="hljs-string">'_channels'</span>].indexOf(channel);
+    <span class="hljs-keyword">if</span> (cpos !== -<span class="hljs-number">1</span>) {
+      pnstate[<span class="hljs-string">'_channels'</span>].splice(cpos, <span class="hljs-number">1</span>);
+    }
+    pnstate[<span class="hljs-string">'_presence'</span>][channel] = <span class="hljs-literal">null</span>;
+
+    <span class="hljs-keyword">this</span>.off(<span class="hljs-keyword">this</span>.messageEventString(channel));
+    <span class="hljs-keyword">this</span>.off(<span class="hljs-keyword">this</span>.presenceEventString(channel));
+
+    <span class="hljs-keyword">const</span> pubnub = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>);
+    pubnub.unsubscribe.call(pubnub, {
+      channel: channel,
+      <span class="hljs-string">'channel_group'</span>: channelGroup
+    });
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method uuid</span></p>
+<p>Generate a new universally unique
+identifier to be used for various
+pubnub objects (users, channels,
+etc...).</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>callback must be a Function.</strong><br/>(Callback method that will return the new UUID.)</li>
+</ul></div></div><div class="code"><div class="wrapper">  uuid(callback) {
+    <span class="hljs-keyword">const</span> pubnub = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>);
+    pubnub.uuid.call(pubnub, callback);
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method whereNow</span></p>
+<p>Return a list of channels the user
+is subscribed to.</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>Callback must be a Function.</strong><br/>(method that will return the list of channels.)</li>
+</ul></div></div><div class="code"><div class="wrapper">  whereNow(callback) {
+    <span class="hljs-keyword">const</span> pubnub = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>);
+    pubnub.where_now.call(pubnub, {
+      callback: callback,
+      error: <span class="hljs-keyword">this</span>._errorCallback,
+    });
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method me</span></p>
+<p>Return the UUID of the current user.</p>
+<p><strong>Returns a String</strong><br/>(The UUID of the current user.)</p></div></div><div class="code"><div class="wrapper">  me() {
+    <span class="hljs-keyword">const</span> pubnub = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>);
+    <span class="hljs-keyword">return</span> pubnub.get_uuid();
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method listChannels</span></p>
+<p>List all available channels.</p>
+<p><strong>Returns an Array</strong><br/>(List of channels.)</p></div></div><div class="code"><div class="wrapper">  listChannels() {
+    <span class="hljs-keyword">return</span> get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pnstate._channels'</span>).slice(<span class="hljs-number">0</span>);
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method listPresence</span></p>
+<p>List all users in a channel.</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>channel must be a String.</strong><br/>(The name of the channel.)</li>
+</ul>
+<p><strong>Returns an Array</strong><br/>(List of users.)</p></div></div><div class="code"><div class="wrapper">  listPresence(channel) {
+    <span class="hljs-keyword">const</span> presence = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">`pnstate._presence.<span class="hljs-subst">${channel}</span>`</span>);
+
+    <span class="hljs-keyword">if</span> (!presence) {
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;
+    }
+
+    <span class="hljs-keyword">return</span> presence.slice(<span class="hljs-number">0</span>);
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method presenceData</span></p>
+<p>Extract cached presence data from
+this service for a channel.</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>channel must be a String.</strong><br/>(The name of the channel.)</li>
+</ul>
+<p><strong>Returns an Object</strong><br/>(Presence data for a channel.)</p></div></div><div class="code"><div class="wrapper">  presenceData(channel) {
+    <span class="hljs-keyword">return</span> get(<span class="hljs-keyword">this</span>, <span class="hljs-string">`pnstate._presData.<span class="hljs-subst">${channel}</span>`</span>) || {};
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method messageEventHandler</span></p>
+<p>Build a closure responsibl for
+triggering a series of messages
+for a channel. This is most useful
+when listing historical messages.</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>channel must be a String.</strong><br/>(The name of the channel.)</li>
+</ul>
+<p><strong>Returns a Function</strong><br/>(Scoped method that can be used to trigger a series of messages.)</p></div></div><div class="code"><div class="wrapper">  messageEventHandler(channel) {
+    <span class="hljs-keyword">const</span> pubnub = <span class="hljs-keyword">this</span>.get(<span class="hljs-string">'pubnub'</span>);
+    <span class="hljs-keyword">return</span> (messages) =&gt; {
+      <span class="hljs-keyword">return</span> pubnub.each(messages[<span class="hljs-number">0</span>], (message) =&gt; {
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.trigger(<span class="hljs-keyword">this</span>.messageEventString(channel), {
+          message: message,
+          channel: channel
+        });
+      });
+    };
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method messageEventString</span></p>
+<p>Message event string. Use this to seed
+the pubnub event handlers.</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>channel must be a String.</strong><br/>(The name of the channel.)</li>
+</ul>
+<p><strong>Returns a String</strong><br/>(Message event string.)</p></div></div><div class="code"><div class="wrapper">  messageEventString(channel) {
+    <span class="hljs-keyword">return</span> <span class="hljs-string">`pn-message:<span class="hljs-subst">${channel}</span>`</span>;
+  },</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method presenceEventString</span></p>
+<p>Presence event string. Use this to seed
+the pubnub event handlers.</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>channel must be a String.</strong><br/>(The name of the channel.)</li>
+</ul>
+<p><strong>Returns a String</strong><br/>(Presence event string.)</p></div></div><div class="code"><div class="wrapper">  presenceEventString(channel) {
+    <span class="hljs-keyword">return</span> <span class="hljs-string">`pn-presence:<span class="hljs-subst">${channel}</span>`</span>;
+  },</div></div></div><div class="segment"><div class="comments doc-section doc-section-private"><div class="wrapper"><p><span class='doc-section-header'>Private method installHandlers</span></p>
+<p>Install event handlers for a channel.</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>args must be an Object.</strong><br/>(Object to install the event handlers.)</li>
+</ul></div></div><div class="code"><div class="wrapper">  _installHandlers(args) {
+    <span class="hljs-keyword">const</span> pubnub = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pubnub'</span>);
+    <span class="hljs-keyword">const</span> pnstate = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'pnstate'</span>);
+    <span class="hljs-keyword">const</span> self = <span class="hljs-keyword">this</span>;
+    args = args || {};
+
+    <span class="hljs-keyword">const</span> oldMessage = args.message;
+    args.message = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+      self.trigger(self.messageEventString(args.channel), {
+        message: <span class="hljs-built_in">arguments</span>[<span class="hljs-number">0</span>],
+        env: <span class="hljs-built_in">arguments</span>[<span class="hljs-number">1</span>],
+        channel: args.channel
+      });
+
+      <span class="hljs-keyword">if</span> (oldMessage) {
+        <span class="hljs-keyword">return</span> oldMessage(<span class="hljs-built_in">arguments</span>);
+      }
+    };
+
+    args.presence = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+      <span class="hljs-keyword">const</span> event = <span class="hljs-built_in">arguments</span>[<span class="hljs-number">0</span>];
+      <span class="hljs-keyword">const</span> channel = args.channel;
+
+      <span class="hljs-keyword">if</span> (event.uuids) {
+        pubnub.each(event.uuids, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">uuid</span>) </span>{
+          <span class="hljs-keyword">const</span> state = uuid.state ? uuid.state : <span class="hljs-literal">null</span>;
+          uuid = uuid.uuid ? uuid.uuid : uuid;
+
+          <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> pnstate[<span class="hljs-string">'_presence'</span>][channel] === <span class="hljs-string">'undefined'</span>) {
+            pnstate[<span class="hljs-string">'_presence'</span>][channel] = [];
+          }
+
+          <span class="hljs-keyword">if</span> (pnstate[<span class="hljs-string">'_presence'</span>][channel].indexOf(uuid) &lt; <span class="hljs-number">0</span>) {
+            pnstate[<span class="hljs-string">'_presence'</span>][channel].push(uuid);
+          }
+
+          <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> pnstate[<span class="hljs-string">'_presData'</span>][channel] === <span class="hljs-string">'undefined'</span>) {
+            pnstate[<span class="hljs-string">'_presData'</span>][channel] = {};
+          }
+
+          <span class="hljs-keyword">if</span> (state) {
+            <span class="hljs-keyword">return</span> pnstate[<span class="hljs-string">'_presData'</span>][channel][uuid] = state;
+          }
+        });
+      } <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">if</span> (event.uuid &amp;&amp; event.action) {
+          <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> pnstate[<span class="hljs-string">'_presence'</span>][channel] === <span class="hljs-string">'undefined'</span>) {
+            pnstate[<span class="hljs-string">'_presence'</span>][channel] = [];
+          }
+
+          <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> pnstate[<span class="hljs-string">'_presData'</span>][channel] === <span class="hljs-string">'undefined'</span>) {
+            pnstate[<span class="hljs-string">'_presData'</span>][channel] = {};
+          }
+
+          <span class="hljs-keyword">if</span> (event.action === <span class="hljs-string">'leave'</span>) {
+            <span class="hljs-keyword">const</span> cpos = pnstate[<span class="hljs-string">'_presence'</span>][channel].indexOf(event.uuid);
+            <span class="hljs-keyword">if</span> (cpos !== -<span class="hljs-number">1</span>) {
+              pnstate[<span class="hljs-string">'_presence'</span>][channel].splice(cpos, <span class="hljs-number">1</span>);
+            }
+            <span class="hljs-keyword">delete</span> pnstate[<span class="hljs-string">'_presData'</span>][channel][event.uuid];
+          } <span class="hljs-keyword">else</span> {
+            <span class="hljs-keyword">if</span> (pnstate[<span class="hljs-string">'_presence'</span>][channel].indexOf(event.uuid) &lt; <span class="hljs-number">0</span>) {
+              pnstate[<span class="hljs-string">'_presence'</span>][channel].push(event.uuid);
+            }
+            <span class="hljs-keyword">if</span> (event.data) {
+              pnstate[<span class="hljs-string">'_presData'</span>][channel][event.uuid] = event.data;
+            }
+          }
+        }
+      }
+
+      <span class="hljs-keyword">return</span> self.trigger(self.presenceEventString(channel), {
+        event: event,
+        message: <span class="hljs-built_in">arguments</span>[<span class="hljs-number">1</span>],
+        channel: channel
+      });
+    };
+
+    <span class="hljs-keyword">return</span> args;
+  },</div></div></div><div class="segment"><div class="comments doc-section doc-section-private"><div class="wrapper"><p><span class='doc-section-header'>Private method errorCallback</span></p>
+<p>The default error callback for all
+methods in this service. I can decide
+what to do here... nothing.</p>
+<p>Parameters:</p>
+<ul>
+<li><strong>message must be an Object.</strong><br/>(The error object.)</li>
+</ul></div></div><div class="code"><div class="wrapper">  _errorCallback(message) {
+    Ember.Error(message);
+  }
+});</div></div></div></div></body></html>

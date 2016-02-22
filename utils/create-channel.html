@@ -1,0 +1,28 @@
+<!DOCTYPE html><html lang="en"><head><title>utils/create-channel</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="utils/create-channel"><meta name="groc-project-path" content="addon/utils/create-channel.js"><meta name="groc-github-url" content="https://github.com/tomasbasham/ember-cli-pubnub"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/tomasbasham/ember-cli-pubnub/blob/master/addon/utils/create-channel.js">addon/utils/create-channel.js</a></div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+<span class="hljs-keyword">import</span> Channel <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-cli-pubnub/models/channel'</span>;
+
+<span class="hljs-keyword">const</span> {
+  assert
+} = Ember;</div></div></div><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'>Method createChannel</span></p>
+<p>Create a channel object with a
+given name. This will be the
+interface to the PubNub service
+when interacting with this
+channel.</p>
+<p>Parameters:</p>
+<ul>
+<li><p><strong>name must be a String.</strong><br/>(The name of the channel.)</p>
+</li>
+<li><p><strong>service must be an Ember.Service.</strong><br/>(The pubnub service.)</p>
+</li>
+</ul>
+<p><strong>Returns an Ember.Object</strong><br/>(A channel object.)</p></div></div><div class="code"><div class="wrapper"><span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">createChannel</span>(<span class="hljs-params">name, service</span>) </span>{
+  assert(<span class="hljs-string">'You must give the channel a name'</span>, name);
+
+  <span class="hljs-keyword">const</span> channel = Channel.create({
+    name: name,
+    pubnub: service
+  });
+
+  <span class="hljs-keyword">return</span> channel;
+}</div></div></div></div></body></html>
