@@ -3,10 +3,12 @@
 JSON type.</p>
 <p>Parameters:</p>
 <ul>
-<li><strong>value must be an Object.</strong><br/>(Any valid JSON type including objects, arrays, strings, and numbers.)</li>
+<li><strong>value must be an Object.</strong><br/>(Any valid JSON type including objects, arrays, strings, numbers, booleans and null.)</li>
 </ul>
 <p><strong>Returns a Boolean</strong><br/>(True if JSON is valid, otherwise false.)</p></div></div><div class="code"><div class="wrapper"><span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">isValid</span>(<span class="hljs-params">value</span>) </span>{
-  <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> value === <span class="hljs-string">'object'</span> || <span class="hljs-keyword">typeof</span> value === <span class="hljs-string">'string'</span> || <span class="hljs-keyword">typeof</span> value === <span class="hljs-string">'number'</span> ) {
+  <span class="hljs-keyword">const</span> valueType = <span class="hljs-keyword">typeof</span> value;
+
+  <span class="hljs-keyword">if</span> (valueType === <span class="hljs-string">'object'</span> || valueType === <span class="hljs-string">'string'</span> || valueType === <span class="hljs-string">'number'</span> || valueType === <span class="hljs-string">'boolean'</span>) {
     <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
   }
 

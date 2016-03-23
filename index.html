@@ -13,7 +13,7 @@
 <pre><code class="lang-JavaScript"><span class="hljs-comment">// config/environment.js</span>
 <span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">environment</span>) </span>{
   <span class="hljs-keyword">var</span> ENV = {
-    PUBNUB: {
+    pubnub: {
       subscribe_key: <span class="hljs-string">'pub-c-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX'</span>,
       publish_key: <span class="hljs-string">'sub-c-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX'</span>,
       ssl: <span class="hljs-literal">true</span>
@@ -77,7 +77,7 @@
   })
 });</code></pre>
 <p>This sets up a callback using the channel&#39;s <code>on</code> method by passing to it a message event string. Typically the event string will be of type string (i.e. <code>pn-message:lobby</code>) however if a function is passed instead (i.e. <code>pubnub.messageEventString</code>) it will be called passing to it the channel name. This gives you the opportunity to dynamically create event strings. In the above example the event string function in fact simply returns <code>pn-message:lobby</code>.</p>
-<p>Further to this you are able to publish to the channel using the <code>publish</code> function. You may pass to this any valid JSON object including objects, arrays, strings, and numbers.</p>
+<p>Further to this you are able to publish to the channel using the <code>publish</code> function. You may pass to this any valid JSON object including objects, arrays, strings, numbers and booleans.</p>
 <h3 id="presence">Presence</h3>
 <p>You may also supply a callback that is invoked on updates to a channel&#39;s listeners.</p>
 <h5 id="-a-name-event-example-a-example-"><a name="event-example"></a>Example:</h5>

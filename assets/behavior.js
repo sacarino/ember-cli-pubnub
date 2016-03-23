@@ -136,8 +136,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         {
           "type": "folder",
           "data": {
-            "path": "app/models",
-            "title": "models"
+            "path": "app/channels",
+            "title": "channels"
           },
           "depth": 2,
           "children": [
@@ -153,10 +153,10 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "foldPrefix": "^",
                   "name": "JavaScript"
                 },
-                "sourcePath": "/Users/tbm/Projects/Programming/Projects/JavaScript/ember-cli-addons/ember-cli-pubnub/app/models/channel.js",
-                "projectPath": "app/models/channel.js",
-                "targetPath": "app/models/channel",
-                "pageTitle": "app/models/channel",
+                "sourcePath": "/Users/tbm/Projects/Programming/Projects/JavaScript/ember-cli-addons/ember-cli-pubnub/app/channels/channel.js",
+                "projectPath": "app/channels/channel.js",
+                "targetPath": "app/channels/channel",
+                "pageTitle": "app/channels/channel",
                 "title": "channel"
               },
               "depth": 3,
@@ -248,8 +248,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
     }, {
       "type": "folder",
       "data": {
-        "path": "models",
-        "title": "models"
+        "path": "channels",
+        "title": "channels"
       },
       "depth": 1,
       "children": [
@@ -265,10 +265,10 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "foldPrefix": "^",
               "name": "JavaScript"
             },
-            "sourcePath": "/Users/tbm/Projects/Programming/Projects/JavaScript/ember-cli-addons/ember-cli-pubnub/addon/models/channel.js",
-            "projectPath": "addon/models/channel.js",
-            "targetPath": "models/channel",
-            "pageTitle": "models/channel",
+            "sourcePath": "/Users/tbm/Projects/Programming/Projects/JavaScript/ember-cli-addons/ember-cli-pubnub/addon/channels/channel.js",
+            "projectPath": "addon/channels/channel.js",
+            "targetPath": "channels/channel",
+            "pageTitle": "channels/channel",
             "title": "channel"
           },
           "depth": 2,
